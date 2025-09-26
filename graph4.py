@@ -13,7 +13,7 @@ fig.add_trace(go.Scatter(
     x=df['TV_Homes'],
     y=df['Chmp'],
     mode='markers',
-    marker=dict(size=0.5),  # hide points
+    marker=dict(size=0.5),
     hovertext=df['Tm'],
     hoverinfo='text'
 ))
@@ -21,7 +21,6 @@ fig.add_trace(go.Scatter(
 logo_path = Path("NFL_Logos") 
 max_size = 0.6  
 
-# Parameters
 min_logo = 0.03  # min logo size in axis units
 max_logo = 0.4  # max logo size in axis units
 
@@ -45,13 +44,66 @@ for idx, row in df.iterrows():
             )
 
 fig.update_layout(
-    title="NFL Teams: TV Homes vs Championships",
-    xaxis_title="TV Homes",
-    yaxis_title="Championships",
-    xaxis=dict(showgrid=True),
-    yaxis=dict(showgrid=True),
-    width=1200,
-    height=800
+   title={
+       'text': "NFL Teams: TV Market Size vs Championships Won<br><sub>Note: Logo size is proportional to Home city population.</sub>",
+       'x': 0.5,
+       'xanchor': 'center',
+       'font': {'size': 16}
+   },
+   xaxis_title="TV Market Size (Millions of TV Households)",
+   yaxis_title="Championships Won",
+   xaxis=dict(
+       showgrid=True,
+       range=[0, df['TV_Homes'].max() * 1.1],
+       showline=True,
+       linewidth=2,
+       linecolor='black'
+   ),
+   yaxis=dict(
+       showgrid=True,
+       range=[-0.5, df['Chmp'].max() + 1],
+       showline=True,
+       linewidth=2,
+       linecolor='black'
+   ),
+   width=1400,
+   height=900,
+   margin=dict(l=80, r=50, t=120, b=80)
 )
 
-fig.write_html("NFL_Teams_Chart.html")
+plotly_html = fig.to_html(config={'staticPlot': True}, include_plotlyjs=True)
+
+container_html = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <style>
+        body {{
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f5f5f5;
+            font-family: Arial, sans-serif;
+        }}
+        .chart-container {{
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            max-width: 100%;
+            overflow: hidden;
+        }}
+    </style>
+</head>
+<body>
+    <div class="chart-container">
+        {plotly_html}
+    </div>
+</body>
+</html>"""
+
+with open("NFL_Teams_Chart.html", "w", encoding="utf-8") as f:
+    f.write(container_html)
