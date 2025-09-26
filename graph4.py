@@ -21,7 +21,7 @@ fig.add_trace(go.Scatter(
 logo_path = Path("NFL_Logos") 
 max_size = 0.6  
 
-min_logo = 0.03  # min logo size in axis units
+min_logo = 0.06  # min logo size in axis units
 max_logo = 0.4  # max logo size in axis units
 
 pop_min = df['Population'].min()
@@ -71,7 +71,7 @@ fig.update_layout(
    margin=dict(l=80, r=50, t=120, b=80)
 )
 
-plotly_html = fig.to_html(config={'staticPlot': True}, include_plotlyjs=True)
+plotly_html = fig.to_html(config={'staticPlot': False}, include_plotlyjs=True)
 
 container_html = f"""<!DOCTYPE html>
 <html>
