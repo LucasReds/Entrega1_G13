@@ -2,6 +2,7 @@ import pandas as pd
 import plotly.graph_objects as go
 from PIL import Image
 from pathlib import Path
+import numpy as np
 
 # Load data
 df = pd.read_csv("team_data_pop.csv")
@@ -18,19 +19,20 @@ fig.add_trace(go.Scatter(
     hoverinfo='text'
 ))
 
-logo_path = Path("NFL_Logos") 
-max_size = 0.6  
+logo_path = Path("NFL_Logos")  
+min_logo = 0.1
+max_logo = 0.3
 
-min_logo = 0.06  # min logo size in axis units
-max_logo = 0.4  # max logo size in axis units
+# Scale win loss percentage
 
-pop_min = df['Population'].min()
-pop_max = df['Population'].max()
+# Exaggerate differences by raising to a power (>1)
+exp_factor = 2.5  # tweak between 2–3 for more exaggeration
 
 for idx, row in df.iterrows():
     png_file = logo_path / f"{row['Tm'].lower().replace(' ', '')}.png"  
     if png_file.exists():
-            scale = min_logo + (row['Population'] - pop_min) / (pop_max - pop_min) * (max_logo - min_logo)        
+            normalized = (row["W-L%.1"] - df["W-L%.1"].min()) / (df["W-L%.1"].max() - df["W-L%.1"].min())
+            scale = min_logo + (normalized ** exp_factor) * (max_logo - min_logo)
             fig.add_layout_image(
                 x=row['TV_Homes'],
                 y=row['Chmp'],
@@ -45,7 +47,7 @@ for idx, row in df.iterrows():
 
 fig.update_layout(
    title={
-       'text': "NFL Teams: TV Market Size vs Championships Won<br><sub>Note: Logo size is proportional to Home city population.</sub>",
+       'text': "NFL Teams: TV Market Size vs Championships Won<br><sub>Note: Logo size is proportional to Winning Percentage</sub>",
        'x': 0.5,
        'xanchor': 'center',
        'font': {'size': 16}
