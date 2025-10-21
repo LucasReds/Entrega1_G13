@@ -9,7 +9,7 @@ import json
 df = pd.read_csv("team_data_pop.csv")
 df['TV_Homes'] = df['TV_Homes'].astype(float)
 df['Chmp'] = df['Chmp'].astype(float)
-df['Founded'] = df.get('Founded', pd.Series([1950]*len(df)))
+df['Founded'] = df.get('Founded', pd.Series([1970]*len(df)))
 df['W-L%.1'] = df['W-L%.1'].astype(float)
 
 # Sample blurbs
@@ -214,6 +214,7 @@ document.addEventListener('DOMContentLoaded', function() {{
 }});
 </script>
 """
+
 
 # --- Export ---
 html_out = fig.to_html(include_plotlyjs=True, full_html=False)
