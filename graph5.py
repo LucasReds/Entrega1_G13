@@ -66,13 +66,18 @@ video_file = "Videos/test_video.mp4"
 with open(video_file, "rb") as f:
     video_base64 = base64.b64encode(f.read()).decode("utf-8")
 
-# --- Prepare team data ---
+# Use 'From' column for founding year
+df['From'] = df.get('From', pd.Series([1970]*len(df)))
+
 team_data_json = json.dumps({
-    row["Tm"]: {"blurb": row["Blurb"], "winrate": float(row["W-L%.1"]), "founded": int(row["Founded"])}
+    row["Tm"]: {
+        "blurb": row["Blurb"],
+        "winrate": float(row["W-L%.1"]),
+        "founded": int(row["From"])
+    }
     for _, row in df.iterrows()
 })
 
-# --- Custom HTML/JS ---
 custom_html = f"""
 <style>
 #right-line, #bottom-line {{
@@ -176,23 +181,27 @@ document.addEventListener('DOMContentLoaded', function() {{
 
                 // --- Position right dot (Win %) ---
                 const winNorm = (team.winrate - minWin)/(maxWin - minWin);
-                rightDot.style.top = rightLine.offsetTop + rightLine.offsetHeight - winNorm*rightLine.offsetHeight - 6 + 'px';
-                rightDot.style.right = '55px';
+                const rightTop = rightLine.getBoundingClientRect().top;
+                const rightHeight = rightLine.offsetHeight;
+                rightDot.style.top = rightTop + rightHeight - winNorm*rightHeight - rightDot.offsetHeight/2 + 'px';
+                rightDot.style.left = rightLine.getBoundingClientRect().left - rightDot.offsetWidth/2 + 'px';
                 rightDot.style.display = 'block';
 
-                rightLabel.style.top = rightLine.offsetTop + rightLine.offsetHeight - winNorm*rightLine.offsetHeight - 6 + 'px';
-                rightLabel.style.right = '40px';
+                rightLabel.style.top = rightTop + rightHeight - winNorm*rightHeight - rightLabel.offsetHeight/2 + 'px';
+                rightLabel.style.left = rightLine.getBoundingClientRect().left + 15 + 'px';
                 rightLabel.textContent = team.winrate;
                 rightLabel.style.display = 'block';
 
                 // --- Position bottom dot (Founded Year) ---
                 const yearNorm = (team.founded - minYear)/(maxYear - minYear);
-                bottomDot.style.left = bottomLine.offsetLeft + yearNorm*bottomLine.offsetWidth - 6 + 'px';
-                bottomDot.style.bottom = '54px';
+                const bottomLeft = bottomLine.getBoundingClientRect().left;
+                const bottomWidth = bottomLine.offsetWidth;
+                bottomDot.style.left = bottomLeft + yearNorm*bottomWidth - bottomDot.offsetWidth/2 + 'px';
+                bottomDot.style.top = bottomLine.getBoundingClientRect().top - bottomDot.offsetHeight/2 + 'px';
                 bottomDot.style.display = 'block';
 
-                bottomLabel.style.left = bottomLine.offsetLeft + yearNorm*bottomLine.offsetWidth - 6 + 'px';
-                bottomLabel.style.bottom = '40px';
+                bottomLabel.style.left = bottomLeft + yearNorm*bottomWidth - bottomLabel.offsetWidth/2 + 'px';
+                bottomLabel.style.top = bottomLine.getBoundingClientRect().top - bottomLabel.offsetHeight - 5 + 'px';
                 bottomLabel.textContent = team.founded;
                 bottomLabel.style.display = 'block';
 
@@ -214,6 +223,7 @@ document.addEventListener('DOMContentLoaded', function() {{
 }});
 </script>
 """
+
 
 
 # --- Export ---
