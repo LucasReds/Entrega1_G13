@@ -54,16 +54,18 @@ for _, row in df.iterrows():
             yanchor="middle",
         )
 
-# --- Load videos ---
+# --- Load video paths instead of embedding (much smaller HTML) ---
 video_path = Path("Videos")
 team_videos = {}
 for _, row in df.iterrows():
     video_file = video_path / f"{row['VideoKey']}.mp4"
     if video_file.exists():
-        with open(video_file, "rb") as f:
-            team_videos[row['Tm']] = base64.b64encode(f.read()).decode("utf-8")
+        # Store the relative path for direct loading
+        team_videos[row['Tm']] = f"Videos/{row['VideoKey']}.mp4"
     else:
-        team_videos[row['Tm']] = None  # fallback
+        team_videos[row['Tm']] = None
+
+
 
 # --- Prepare JSON for JS ---
 team_data_json = json.dumps({
@@ -207,7 +209,7 @@ document.addEventListener('DOMContentLoaded', function() {{
 
                 // --- Show video and caption ---
                 if(team.video){{
-                    video.src = "data:video/mp4;base64," + team.video;
+                    video.src = team.video;
                     video.load();
                     video.play();
                 }}
