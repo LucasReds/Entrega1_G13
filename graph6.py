@@ -14,16 +14,6 @@ df['W-L%.1'] = df['W-L%.1'].astype(float)
 # --- Extract last word from team name for video ---
 df['VideoKey'] = df['Tm'].apply(lambda x: x.split()[-1])
 
-# Sample blurbs
-sample_blurbs = [
-    "Historic franchise with multiple championships.",
-    "Strong defense and passionate fan base.",
-    "Recent playoff contender with young talent.",
-    "Emerging powerhouse with large TV market.",
-    "Classic rivalry team with rich legacy."
-]
-df['Blurb'] = [sample_blurbs[i % len(sample_blurbs)] for i in range(len(df))]
-
 # --- Prepare figure ---
 fig = go.Figure()
 fig.add_trace(go.Scatter(
@@ -70,7 +60,6 @@ for _, row in df.iterrows():
 # --- Prepare JSON for JS ---
 team_data_json = json.dumps({
     row["Tm"]: {
-        "blurb": row["Blurb"],
         "winrate": float(row["W-L%.1"]),
         "founded": int(row["From"]),
         "video": team_videos[row["Tm"]],
@@ -174,26 +163,41 @@ body {{
 }}
 #hoverVideo {{
     position: fixed;
-    bottom: 20px;
-    right: 20px;
     width: 320px;
     border-radius: 10px;
     display: none;
+    z-index: 10000;
 }}
 #hoverCaption {{
     position: fixed;
-    bottom: 10px;
-    right: 20px;
-    width: 320px;
     background: rgba(0,0,0,0.7);
     color: white;
     font-family: sans-serif;
     font-size: 14px;
     padding: 8px;
-    border-radius: 0 0 10px 10px;
-    display: none;
+    border-radius: 10px;
     text-align: center;
+    z-index: 10001;
+    display: none;
+    width: 305px;
 }}
+
+.axis-title {{
+    position: absolute;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 16px;       /* bigger than tick labels */
+    font-weight: 700;       /* bold */
+    color: #111;            /* darker text */
+    background: #fff;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 2px solid #555;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    z-index: 100001 !important;
+    pointer-events: none;
+}}
+
+
 </style>
 
 <div id="right-line"></div>
@@ -204,6 +208,8 @@ body {{
 <div id="bottom-label" class="indicator-label"></div>
 <div id="line-to-right" class="connecting-line"></div>
 <div id="line-to-bottom" class="connecting-line"></div>
+<div id="line-to-right-label" class="axis-title">Win %</div>
+<div id="line-to-bottom-label" class="axis-title">Founded Year</div>
 
 <!-- Axis labels containers -->
 <div id="right-axis-labels"></div>
@@ -282,8 +288,10 @@ document.addEventListener('DOMContentLoaded', function() {{
                 }};
                 positionLines(relativeRect);
                 createAxisLabels(relativeRect);
+
                 return;
             }}
+            
         }}
         
         if (plotArea) {{
@@ -320,25 +328,42 @@ document.addEventListener('DOMContentLoaded', function() {{
     // Function to position the reference lines
     function positionLines(plotRect) {{
         const offset = 80; // Distance from the plot area
-        
-        // Get the container for bounds checking
+
         const container = document.querySelector('.container');
         const containerRect = container.getBoundingClientRect();
         const containerWidth = containerRect.width;
         const containerHeight = containerRect.height;
-        
-        // Calculate safe positioning for right line
+
+        // --- Position right line ---
         const rightLineLeft = Math.min(plotRect.right + offset, containerWidth - 10);
         rightLine.style.left = rightLineLeft + 'px';
         rightLine.style.top = plotRect.top + 'px';
         rightLine.style.height = plotRect.height + 'px';
-        
-        // Calculate safe positioning for bottom line
+
+        // --- Position bottom line ---
         const bottomLineTop = Math.min(plotRect.bottom + offset, containerHeight - 10);
         bottomLine.style.left = plotRect.left + 'px';
         bottomLine.style.top = bottomLineTop + 'px';
         bottomLine.style.width = plotRect.width + 'px';
+
+        // --- Position static axis labels ---
+        const lineRightLabel = document.getElementById('line-to-right-label');
+        const lineBottomLabel = document.getElementById('line-to-bottom-label');
+
+        if (lineRightLabel && lineBottomLabel) {{
+            // Right axis label: vertically centered along the right line
+            lineRightLabel.style.left = (rightLineLeft + 5) + 'px'; // small spacing from the line
+            lineRightLabel.style.top = (plotRect.top + plotRect.height / 2 - lineRightLabel.offsetHeight / 2) + 'px';
+            lineRightLabel.style.display = 'block';
+
+            // Bottom axis label: horizontally centered below the bottom line
+            lineBottomLabel.style.left = (plotRect.left + plotRect.width / 2 - lineBottomLabel.offsetWidth / 2) + 'px';
+            lineBottomLabel.style.top = (bottomLineTop + 5) + 'px'; // small spacing below the line
+            lineBottomLabel.style.transform = 'rotate(0deg)';
+            lineBottomLabel.style.display = 'block';
+        }}
     }}
+
     
     // Function to create numerical labels along the axes
     function createAxisLabels(plotRect) {{
@@ -411,7 +436,7 @@ document.addEventListener('DOMContentLoaded', function() {{
             const team = teamData[teamName];
             if(team && teamName !== currentTeam){{
                 currentTeam = teamName;
-                caption.textContent = team.blurb;
+                caption.textContent = "Video de campeonato más reciente";
                 
                 // Small delay to ensure line dimensions are calculated
                 setTimeout(() => {{
@@ -510,9 +535,19 @@ document.addEventListener('DOMContentLoaded', function() {{
                     video.src = team.video;
                     video.load();
                     video.play();
+                    const videoWidth = video.offsetWidth;
+                    const offset = 20;
+
+                    video.style.left = (e.clientX - 320 - offset) + 'px';
+                    video.style.top = (e.clientY - 220 - offset) + 'px';
+                    video.style.display = 'block'; // display first
+                    setTimeout(() => {{
+                        const videoRect = video.getBoundingClientRect();
+                        caption.style.left = videoRect.left + 'px';
+                        caption.style.top = (videoRect.bottom + 5) + 'px';
+                        caption.style.display = 'block';
+                    }}, 50);
                 }}
-                video.style.display='block';
-                caption.style.display='block';
                 }}, 10); // End setTimeout
             }}
         }} else {{
