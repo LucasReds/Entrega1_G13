@@ -168,7 +168,7 @@ container_html = f"""<!DOCTYPE html>
         }}
 
         // dict Tm -> Chmp inyectado desde Python
-        var teamWins = __TEAM_WINS_JSON__;
+        var teamWins = {json.dumps(dict(zip(df['Tm'], df['Chmp'])))};
         var maxWins = Math.max.apply(null, Object.values(teamWins));
 
         // -------- FUNCIÓN CENTRAL: marcar barra + audio --------
