@@ -14,10 +14,11 @@
 
       let buffer = [];
       const WINDOW = 600; // ms
-      const KICK_THRESHOLD = 25;
+      const KICK_THRESHOLD = 1;
       let lastKickTime = 0;
 
       Protobject.Acceleration.onData((data) => {
+          console.log("ACCEL:", data);
           const now = Date.now();
           const norm = Math.sqrt(data.x**2 + data.y**2 + data.z**2);
 
