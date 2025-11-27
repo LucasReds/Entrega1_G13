@@ -6,8 +6,8 @@ Protobject.initialize(
 			page: "phone.html",
 		},
 		{ 
-			name: "Knob",
-			page: "index.html",
+			name: "Main",
+			page: "NFL_Teams_Chart4.html",
 			main: true,
 		}
 	]);

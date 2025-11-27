@@ -9,28 +9,37 @@
     <script src="https://app.protobject.com/framework/p.js"></script>
     <script src="config.js"></script>
     <h1>Arduino servo control</h1>
-
     <script>
-      // Empezar a leer aceleración cada 300ms
-      Protobject.Acceleration.start(300);
+      Protobject.Acceleration.start(50); 
+
+      let buffer = [];
+      const WINDOW = 600; // ms
+      const KICK_THRESHOLD = 25;
+      let lastKickTime = 0;
 
       Protobject.Acceleration.onData((data) => {
-        console.log("X: " + data.x + "; Y: " + data.y + "; Z: " + data.z);
+          const now = Date.now();
+          const norm = Math.sqrt(data.x**2 + data.y**2 + data.z**2);
 
-        // norma del vector (magnitud)
-        const norm = Math.sqrt(
-          data.x * data.x +
-          data.y * data.y +
-          data.z * data.z
-        );
+          buffer.push({ t: now, v: norm });
 
-        // Enviar al index
-        Protobject.Core.send({
-          type: "acceleration",
-          norm: norm
-        }).to("index.html");
+          buffer = buffer.filter(p => now - p.t <= WINDOW);
+
+          const peak = Math.max(...buffer.map(p => p.v));
+
+          if (peak > KICK_THRESHOLD && now - lastKickTime > 800) {
+              console.log("KICK DETECTED! Peak:", peak);
+
+              Protobject.send({
+                  type: "kick",
+                  strength: peak
+              });
+
+              lastKickTime = now;
+              buffer = []; 
+          }
       });
-      
-    </script>
+      </script>
+
   </body>
 </html>

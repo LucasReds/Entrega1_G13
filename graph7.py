@@ -112,6 +112,10 @@ container_html = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8" />
+
+    <script src="https://app.protobject.com/framework/p.js"></script>
+    <script src="config.js"></script>
+
     <style>
         body {{
             margin: 0;
@@ -123,53 +127,89 @@ container_html = f"""<!DOCTYPE html>
             background-color: #f5f5f5;
             font-family: Arial, sans-serif;
         }}
+
         .chart-container {{
             background-color: white;
             border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             padding: 20px;
             max-width: 100%;
             overflow: hidden;
         }}
+
+        #protobject-device-button {{
+            position: fixed !important;
+            top: 10px !important;
+            right: 10px !important;
+            z-index: 999999 !important;
+        }}
     </style>
 </head>
+
 <body>
+
     <div class="chart-container">
         {plotly_html}
-        <audio id = "CrowdAudio" controls>
+        <audio id="CrowdAudio" preload="auto">
             <source src="Audio/CheeringSFX.mp3" type="audio/mpeg">
         </audio>
     </div>
 
     <script>
+    Protobject.setProduction(true);
+    Protobject.initialize([
+        {{ name: "Phone", page: "phone.html" }},
+        {{ name: "Graph", page: "NFL_Teams_Chart4.html", main: true }}
+    ]);
     document.addEventListener("DOMContentLoaded", function() {{
-         
+
         var audio = document.getElementById("CrowdAudio");
         var graphDiv = document.querySelector(".plotly-graph-div");
 
         var teamWins = {json.dumps(dict(zip(df['Tm'], df['Chmp'])))};
 
         graphDiv.on('plotly_click', function(data) {{
-
             if (!data.points.length) return;
 
-            var team = data.points[0].y;  
+            var team = data.points[0].y;
             var wins = teamWins[team];
-
             var maxWins = Math.max(...Object.values(teamWins));
-            var volume = wins / maxWins;
 
-            volume = Math.max(0.1, volume);
-            volume = Math.min(1.0, volume);
+            var volume = Math.max(0.1, Math.min(1.0, wins / maxWins));
 
             audio.volume = volume;
             audio.currentTime = 0;
             audio.play();
         }});
+        Protobject.Core.onReceived(function(msg) {{
+            console.log("Received msg:", msg);
+
+            if (msg.type !== "kick") return;
+
+            var force = msg.strength;
+
+            // map force → championships (example)
+            var chmp = Math.round(force / 5);
+            if (chmp < 0) chmp = 0;
+            if (chmp > 13) chmp = 13;
+
+            var teams = Object.keys(teamWins)
+                .filter(t => teamWins[t] === chmp);
+
+            teams.forEach(team => {{
+                var index = Object.keys(teamWins).indexOf(team);
+                Plotly.Fx.click(graphDiv, {{
+                    curveNumber: 0,
+                    pointNumber: index
+                }});
+            }});
+        }});
     }});
     </script>
+
 </body>
 </html>"""
+
 
 with open("NFL_Teams_Chart4.html", "w", encoding="utf-8") as f:
     f.write(container_html)
