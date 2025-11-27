@@ -42,43 +42,54 @@
             const graphDiv = w.document.querySelector(".plotly-graph-div");
             if (!graphDiv || !graphDiv.data || !graphDiv.data[0]) return 0;
 
-            const nBars = graphDiv.data[0].y.length;
+            const minNorm = 10;
+            const maxNorm = 50;
 
-            const minNorm = 8;
-            const maxNorm = 20;
+            const NormInRange = Math.max(minNorm, Math.min(maxNorm, norm));
+            const N = (NormInRange - minNorm) / (maxNorm - minNorm);
 
-            const clamped = Math.max(minNorm, Math.min(maxNorm, norm));
-            const t = (clamped - minNorm) / (maxNorm - minNorm);
+            const champEquivalent = t * 13;
 
-            let idx = Math.floor(t * (nBars - 1));
-            return Math.max(0, Math.min(idx, nBars - 1));
-        }
+            const ChmpAllowed = [13, 9, 8, 6, 5, 4, 3, 2, 1, 0];
+
+            for (let x of ChmpAllowed) {
+                if (champEquivalent >= x) {
+                const ChmpNumber = x;
+                }
+            }
+            const ChmpNumber = 0;
+
+            const data = graphDiv.data[0];
+
+            const champsArray = data.x;
+
+            const targetChamp = accelToChamp(norm);
+            console.log("norm:", norm, "→ champ equivalente:", targetChamp);
+
+            // buscar el primer equipo con ese numero de championships
+            let idx = 0;
+            for (let i = 0; i < champsArray.length; i++) {
+                if (Number(champsArray[i]) === ChmpNumber) {
+                idx = i;
+                break;   // el primero que aparezca
+                }
+            }
+            return idx;
+            }
 
         function handleAccelerationMessage(msg) {
             if (!msg) return;
 
             if (msg.type === "acceleration" && typeof msg.norm === "number") {
-                const index = normToBarIndex(msg.norm);
-                console.log("➡ Seleccionar barra:", index);
-                clickBarByIndex(index);
+                const idxBar = normToBarIndex(msg.norm);
+                console.log(" Seleccionar barra:", idxBar);
+                clickBarByIndex(idxBar);
             }
         }
 
-        // 🔹 Listener nativo de Protobject (versiones antiguas)
-        if (typeof Protobject.receive === "function") {
-            const originalReceive = Protobject.receive;
-            Protobject.receive = function(msg) {
-                handleAccelerationMessage(msg);
-                originalReceive(msg);
-            };
-        }
-
-        // 🔹 Listener moderno
-        if (typeof Protobject.onMessage === "function") {
-            Protobject.onMessage(handleAccelerationMessage);
-        }
-
-        console.log("📡 Listo para recibir acelerómetro desde el teléfono.");
+        Protobject.Core.onReceived(function (message) {
+          handleAccelerationMessage(message);
+        });
     });
     </script>
 
