@@ -155,49 +155,86 @@ container_html = f"""<!DOCTYPE html>
     </div>
 
     <script>
-    Protobject.setProduction(true);
     document.addEventListener("DOMContentLoaded", function() {{
 
         var audio = document.getElementById("CrowdAudio");
         var graphDiv = document.querySelector(".plotly-graph-div");
 
-        var teamWins = {json.dumps(dict(zip(df['Tm'], df['Chmp'])))};
+        if (!graphDiv) {{
+            console.error("No se encontró .plotly-graph-div");
+            return;
+        }}
 
+        // dict Tm -> Chmp inyectado desde Python
+        var teamWins = __TEAM_WINS_JSON__;
+        var maxWins = Math.max.apply(null, Object.values(teamWins));
+
+        // -------- FUNCIÓN CENTRAL: marcar barra + audio --------
+        function playCrowdForIndex(idx) {{
+            try {{
+                if (!graphDiv.data || !graphDiv.data[0]) {{
+                    console.warn("graphDiv.data no está listo todavía");
+                    return;
+                }}
+
+                var teams = graphDiv.data[0].y;  // orden real de las barras
+                if (idx < 0 || idx >= teams.length) {{
+                    console.warn("Índice fuera de rango:", idx);
+                    return;
+                }}
+
+                var team = teams[idx];
+                var wins = teamWins[team] || 0;
+
+                // Marcar la barra seleccionada
+                Plotly.restyle(graphDiv, {{ selectedpoints: [[idx]] }}, [0]);
+
+                // Volumen según campeonatos
+                var volume = Math.max(0.1, Math.min(1.0, wins / maxWins));
+
+                audio.volume = volume;
+                audio.currentTime = 0;
+                audio.play();
+
+            }} catch (e) {{
+                console.error("Error en playCrowdForIndex:", e);
+            }}
+        }}
+
+        // Mouse Interaction
         graphDiv.on('plotly_click', function(data) {{
             if (!data.points.length) return;
 
-            var team = data.points[0].y;
-            var wins = teamWins[team];
-            var maxWins = Math.max(...Object.values(teamWins));
-
-            var volume = Math.max(0.1, Math.min(1.0, wins / maxWins));
-
-            audio.volume = volume;
-            audio.currentTime = 0;
-            audio.play();
+            var idx = data.points[0].pointNumber;  // índice de la barra clickeada
+            playCrowdForIndex(idx);
         }});
+
+        // Phone Interaction
         Protobject.Core.onReceived(function(msg) {{
             console.log("Received msg:", msg);
 
             if (msg.type !== "kick") return;
 
-            var force = msg.strength;
+            var force = msg.strength || 0;
 
-            // map force → championships (example)
             var chmp = Math.round(force / 5);
             if (chmp < 0) chmp = 0;
             if (chmp > 13) chmp = 13;
 
-            var teams = Object.keys(teamWins)
-                .filter(t => teamWins[t] === chmp);
+            if (!graphDiv.data || !graphDiv.data[0]) {{
+                console.warn("graphDiv.data no está listo cuando llegó el mensaje");
+                return;
+            }}
 
-            teams.forEach(team => {{
-                var index = Object.keys(teamWins).indexOf(team);
-                Plotly.Fx.click(graphDiv, {{
-                    curveNumber: 0,
-                    pointNumber: index
-                }});
-            }});
+            var teamsInGraph = graphDiv.data[0].y;
+
+            for (var i = 0; i < teamsInGraph.length; i++) {{
+                var team = teamsInGraph[i];
+                if (teamWins[team] === chmp) {{
+                    playCrowdForIndex(i);
+                    break;
+                }}
+            }}
         }});
     }});
     </script>
