@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Football!</title>
+<!-- Aquí insertas tu gráfico generado por Python -->
+<iframe 
+    src="NFL_Teams_Chart4.html" 
+    width="100%" 
+    height="900px" 
+    style="border:none;">
+</iframe>
+  <body>
+    <script src="https://app.protobject.com/framework/p.js"></script>
+    <script src="config.js"></script>
+    <script>
+    window.addEventListener("load", () => {
+
+        const iframe = document.getElementById("nfl-frame");
+
+        function clickBarByIndex(barIndex) {
+            if (!iframe || !iframe.contentWindow) return;
+
+            const w = iframe.contentWindow;
+            const Plotly = w.Plotly;
+            if (!Plotly || !Plotly.Fx) return;
+
+            const graphDiv = w.document.querySelector(".plotly-graph-div");
+            if (!graphDiv) return;
+
+            Plotly.Fx.click(graphDiv, {
+                curveNumber: 0,
+                pointNumber: barIndex
+            });
+        }
+
+        function normToBarIndex(norm) {
+            if (!iframe || !iframe.contentWindow) return 0;
+
+            const w = iframe.contentWindow;
+            const graphDiv = w.document.querySelector(".plotly-graph-div");
+            if (!graphDiv || !graphDiv.data || !graphDiv.data[0]) return 0;
+
+            const nBars = graphDiv.data[0].y.length;
+
+            const minNorm = 8;
+            const maxNorm = 20;
+
+            const clamped = Math.max(minNorm, Math.min(maxNorm, norm));
+            const t = (clamped - minNorm) / (maxNorm - minNorm);
+
+            let idx = Math.floor(t * (nBars - 1));
+            return Math.max(0, Math.min(idx, nBars - 1));
+        }
+
+        function handleAccelerationMessage(msg) {
+            if (!msg) return;
+
+            if (msg.type === "acceleration" && typeof msg.norm === "number") {
+                const index = normToBarIndex(msg.norm);
+                console.log("➡ Seleccionar barra:", index);
+                clickBarByIndex(index);
+            }
+        }
+
+        // 🔹 Listener nativo de Protobject (versiones antiguas)
+        if (typeof Protobject.receive === "function") {
+            const originalReceive = Protobject.receive;
+            Protobject.receive = function(msg) {
+                handleAccelerationMessage(msg);
+                originalReceive(msg);
+            };
+        }
+
+        // 🔹 Listener moderno
+        if (typeof Protobject.onMessage === "function") {
+            Protobject.onMessage(handleAccelerationMessage);
+        }
+
+        console.log("📡 Listo para recibir acelerómetro desde el teléfono.");
+    });
+    </script>
+
+  </body>
+</html>
+ 
