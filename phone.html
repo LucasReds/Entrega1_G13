@@ -31,7 +31,7 @@
           if (peak > KICK_THRESHOLD && now - lastKickTime > 800) {
               console.log("KICK DETECTED! Peak:", peak);
 
-              Protobject.send({
+              Protobject.Core.send({
                   type: "kick",
                   strength: peak
               });
