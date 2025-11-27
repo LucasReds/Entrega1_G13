@@ -147,8 +147,6 @@ container_html = f"""<!DOCTYPE html>
 </head>
 
 <body>
-    <script src="https://app.protobject.com/framework/p.js"></script>
-    <script src="config.js"></script>
     <div class="chart-container">
         {plotly_html}
         <audio id="CrowdAudio" preload="auto">
