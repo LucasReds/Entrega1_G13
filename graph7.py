@@ -155,6 +155,8 @@ container_html = f"""<!DOCTYPE html>
     </div>
 
     <script>
+    Protobject.setProduction(true);
+    
     document.addEventListener("DOMContentLoaded", function() {{
 
         var audio = document.getElementById("CrowdAudio");
