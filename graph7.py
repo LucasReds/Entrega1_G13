@@ -238,7 +238,7 @@ container_html = f"""<!DOCTYPE html>
 
             var bestAllowed = null;
             for (var i = 0; i < allowedChmp.length; i++) {{
-                if (allowedChmp[i] <= chmpTarget) {{
+                if (allowedChmp[i] <= chmpEquivalent) {{
                     bestAllowed = allowedChmp[i];
                 }} else {{
                     break;
