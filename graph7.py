@@ -216,9 +216,16 @@ container_html = f"""<!DOCTYPE html>
 
             var force = msg.strength || 0;
 
-            var chmp = Math.round(force / 5);
-            if (chmp < 0) chmp = 0;
-            if (chmp > 13) chmp = 13;
+            if (force <= 10) {{
+                return;
+            }}
+
+            if (force > 70) {{
+                force = 70;
+            }}
+
+            var normalized = (force - 10) / (65 - 10);  // [0, 1]
+            var chmpEquivalent = Math.round(normalized * 13);
 
             if (!graphDiv.data || !graphDiv.data[0]) {{
                 console.warn("graphDiv.data no está listo cuando llegó el mensaje");
@@ -227,12 +234,34 @@ container_html = f"""<!DOCTYPE html>
 
             var teamsInGraph = graphDiv.data[0].y;
 
-            for (var i = 0; i < teamsInGraph.length; i++) {{
-                var team = teamsInGraph[i];
-                if (teamWins[team] === chmp) {{
-                    playCrowdForIndex(i);
+            var allowedChmp = [0, 1, 2, 3, 4, 5, 6, 8, 9, 13];
+
+            var bestAllowed = null;
+            for (var i = 0; i < allowedWins.length; i++) {{
+                if (allowedWins[i] <= chmpTarget) {{
+                    bestAllowed = allowedWins[i];
+                }} else {{
                     break;
                 }}
+            }}
+            
+            if (bestAllowed === null) {{
+                bestAllowed = allowedWins[0]
+            }}
+            var bestIdx = -1;
+
+            for (var j = 0; j < teamsInGraph.length; j++) {{
+                var team = teamsInGraph[j];
+                var wins = teamWins[team];
+
+                if (wins === bestAllowed) {{
+                    bestIdx = j;  // nos quedamos con el primero que matchee
+                    break;
+                }}
+            }}
+
+            if (bestIdx !== -1) {{
+                playCrowdForIndex(bestIdx);
             }}
         }});
     }});
