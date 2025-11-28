@@ -237,16 +237,16 @@ container_html = f"""<!DOCTYPE html>
             var allowedChmp = [0, 1, 2, 3, 4, 5, 6, 8, 9, 13];
 
             var bestAllowed = null;
-            for (var i = 0; i < allowedWins.length; i++) {{
-                if (allowedWins[i] <= chmpTarget) {{
-                    bestAllowed = allowedWins[i];
+            for (var i = 0; i < allowedChmp.length; i++) {{
+                if (allowedChmp[i] <= chmpTarget) {{
+                    bestAllowed = allowedChmp[i];
                 }} else {{
                     break;
                 }}
             }}
             
             if (bestAllowed === null) {{
-                bestAllowed = allowedWins[0]
+                bestAllowed = allowedChmp[0]
             }}
             var bestIdx = -1;
 
