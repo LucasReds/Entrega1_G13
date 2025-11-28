@@ -136,13 +136,13 @@ container_html = f"""<!DOCTYPE html>
             max-width: 100%;
             overflow: hidden;
         }}
-
         #protobject-device-button {{
-            position: fixed !important;
-            top: 10px !important;
-            right: 10px !important;
-            z-index: 999999 !important;
+        position: fixed !important;
+        top: 10px !important;
+        right: 10px !important;
+        z-index: 999999 !important;
         }}
+
     </style>
 </head>
 
@@ -156,7 +156,6 @@ container_html = f"""<!DOCTYPE html>
 
     <script>
     Protobject.setProduction(true);
-    
     document.addEventListener("DOMContentLoaded", function() {{
 
         var audio = document.getElementById("CrowdAudio");
