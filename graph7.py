@@ -113,9 +113,6 @@ container_html = f"""<!DOCTYPE html>
 <head>
     <meta charset="utf-8" />
 
-    <script src="https://app.protobject.com/framework/p.js"></script>
-    <script src="config.js"></script>
-
     <style>
         body {{
             margin: 0;
@@ -153,7 +150,8 @@ container_html = f"""<!DOCTYPE html>
             <source src="Audio/CheeringSFX.mp3" type="audio/mpeg">
         </audio>
     </div>
-
+    <script src="https://app.protobject.com/framework/p.js"></script>
+    <script src="config.js"></script>
     <script>
     Protobject.setProduction(true);
     document.addEventListener("DOMContentLoaded", function() {{
